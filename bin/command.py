@@ -10,8 +10,8 @@ Date: 2024.07.29
 import click
 import os
 from typing import Optional
-from pybp.pybp.logger.logger_helper import get_logger
-from pybp.pybp.file_io.textline_file import load_text_line_file, dump_text_line_file
+from pybp.logger.logger_helper import get_logger
+from pybp.file_io.textline_file import load_text_line_file, dump_text_line_file
 
 logger = get_logger()
 
