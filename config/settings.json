@@ -1,0 +1,15 @@
+{
+  "default": {
+    "desc": "默认使用 default 配置单",
+    "env": "default",
+    "log_level": "info",
+    "cleaner": {
+      "bad_words_filepath": "sgame_nlp_data/data/cleaner/bad_words.txt"
+    }
+  },
+  "dev": {
+    "desc": "当需要使用 dev 配置单时，需要声明环境变量，如：export ENV_FOR_DYNACONF=development 或者 ENV_FOR_DYNACONF=dev program.py",
+    "env": "dev",
+    "log_level": "debug"
+  }
+}
