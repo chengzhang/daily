@@ -1,8 +1,8 @@
 """
-sgame_nlp_data 工程的命令行入口
+daily 工程的命令行入口
 
-Author: donyzhang
-Date: 2024.07.10
+Author: chengzhang
+Date: 2024.07.29
 """
 
 # coding = utf8
@@ -10,9 +10,8 @@ Date: 2024.07.10
 import click
 import os
 from typing import Optional
-from sgame_nlp_data.utils.logger import get_logger
-from sgame_nlp_data.utils.file_util import load_text_line_file, dump_text_line_file
-from sgame_nlp_data.cleaner.cleaner import Cleaner
+from pybp.pybp.logger.logger_helper import get_logger
+from pybp.pybp.file_io.textline_file import load_text_line_file, dump_text_line_file
 
 logger = get_logger()
 
@@ -23,59 +22,59 @@ def cli():
 
 
 @cli.command()
-@click.argument("in_file", type=str, help='待清洗的句子，文本文件，每行一句话')
-@click.argument("out_file", type=str, help='清洗后的句子，文本文件，每行一句话')
-@click.option("--force_out", is_flag=True, help='如果 out_file 存在，是否强制 overwrite，默认是')
+@click.argument("in_file", type=str, help='news urls text file, one link per line')
+@click.argument("out_file", type=str, help='final doc text file')
+@click.option("--overwrite", is_flag=True, help='如果 out_file 文件存在，是否直接覆盖它，默认：覆盖')
 @click.option("--verbose", is_flag=True, help='输出详细的清洗过程')
-@click.option("--more_bad_words", type=str, help='指定额外的过滤词, 则它们将与内建的过滤词一起生效')
-@click.option("--exclude_bad_words", type=str, help='指定不生效的过滤词, 则从过滤词典中去除这些过滤词。如果与 more_bad_words 有重合，则以 exclude_bad_words 为准')  # noqa E501
-def filter_entity(
+@click.option("--internal_file", type=str, help='internal output text file')
+def ai_daily(
         in_file: str,
         out_file: str,
-        force_out: Optional,
+        overwrite: Optional,
         verbose: Optional,
-        more_bad_words: Optional,
-        exclude_bad_words: Optional,
+        internal_file: Optional,
 ):
-    """ 输入一批句子，过滤掉包含实体的句子。 """
+    """ ai-related news daily """
     if not os.path.exists(in_file):
         logger.error(f'in_file is not a valid path: {in_file}')
         return
 
+    """ out file """
     if os.path.exists(out_file):
-        if force_out:
+        if overwrite:
             logger.warning(f'out_file is going to be overwrite: {out_file}')
         else:
-            logger.error(f'out_file exist, and not force_out: {more_bad_words} remove out_file or set force_out True')
+            logger.error(f'out_file exist, and not overwrite!')
             return
     else:
         out_dir = os.path.dirname(out_file)
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
-    if more_bad_words and not os.path.exists(more_bad_words):
-        logger.error(f'more_bad_words is not a valid path: {more_bad_words}')
-        return
+    """ internal file """
+    if internal_file:
+        if os.path.exists(internal_file):
+            if overwrite:
+                logger.warning(f'internal_file is going to be overwrite: {internal_file}')
+            else:
+                logger.error(f'internal_file exist, and not overwrite!')
+                return
+        else:
+            out_dir = os.path.dirname(internal_file)
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
 
-    if exclude_bad_words and not os.path.exists(exclude_bad_words):
-        logger.error(f'exclude_bad_words is not a valid path: {exclude_bad_words}')
-        return
+    in_urls = load_text_line_file(in_file)
+    daily, internal_texts = ai_daily(in_urls)
 
-    more_bad_words = load_text_line_file(more_bad_words)
-    exclude_bad_words = load_text_line_file(exclude_bad_words)
-
-    cleaner = Cleaner(more_bad_words=more_bad_words, exclude_bad_words=exclude_bad_words)
-
-    in_texts = load_text_line_file(in_file)
-    out_texts, bad_text_word_pairs = cleaner.clean_texts(in_texts, verbose=verbose)
-    dump_text_line_file(out_texts, out_file)
+    dump_text_line_file([daily], out_file)
+    dump_text_line_file(internal_texts, internal_file)
 
 
 @cli.command()
-def show_clean_bad_words():
-    """ 展示所有的 build-in 的脏词 """
-    cleaner = Cleaner()
-    cleaner.show_bad_words()
+def say_hi():
+    """ say hi """
+    print('hi my friend')
 
 
 if __name__ == '__main__':
