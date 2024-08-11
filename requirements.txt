@@ -1,3 +1,6 @@
 git+https://github.com/chengzhang/pybp.git
 
 click
+openai==0.28
+requests
+beautifulsoup4

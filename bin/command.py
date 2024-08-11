@@ -10,8 +10,9 @@ Date: 2024.07.29
 import click
 import os
 from typing import Optional
-from pybp.logger.logger_helper import get_logger
+from pybp.logger.app_logger import get_logger
 from pybp.file_io.textline_file import load_text_line_file, dump_text_line_file
+from daily.entry.ai_daily.ai_daily_entry import AiDailyEntry
 
 logger = get_logger()
 
@@ -22,8 +23,8 @@ def cli():
 
 
 @cli.command()
-@click.argument("in_file", type=str, help='news urls text file, one link per line')
-@click.argument("out_file", type=str, help='final doc text file')
+@click.argument("in_file", type=str)  # news urls text file, one link per line
+@click.argument("out_file", type=str)  # final doc text file
 @click.option("--overwrite", is_flag=True, help='如果 out_file 文件存在，是否直接覆盖它，默认：覆盖')
 @click.option("--verbose", is_flag=True, help='输出详细的清洗过程')
 @click.option("--internal_file", type=str, help='internal output text file')
@@ -34,7 +35,10 @@ def ai_daily(
         verbose: Optional,
         internal_file: Optional,
 ):
-    """ ai-related news daily """
+    """ ai-related news daily
+    example: python bin/command.py ai-daily tests/daily/entry/ai_daily/test_ai_daily_entiry.input_example.txt tmp/test_ai_daily_entiry.output.txt  # noqa: E501
+    """
+
     if not os.path.exists(in_file):
         logger.error(f'in_file is not a valid path: {in_file}')
         return
@@ -65,10 +69,12 @@ def ai_daily(
                 os.makedirs(out_dir)
 
     in_urls = load_text_line_file(in_file)
-    daily, internal_texts = ai_daily(in_urls)
+    ai_daily_entry = AiDailyEntry(in_urls)
+    daily_result = ai_daily_entry.report()
 
-    dump_text_line_file([daily], out_file)
-    dump_text_line_file(internal_texts, internal_file)
+    dump_text_line_file([daily_result.text], out_file)
+    if internal_file:
+        dump_text_line_file(daily_result.logs, internal_file)
 
 
 @cli.command()

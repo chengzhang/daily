@@ -3,8 +3,10 @@
     "desc": "默认使用 default 配置单",
     "env": "default",
     "log_level": "info",
-    "cleaner": {
-      "bad_words_filepath": "sgame_nlp_data/data/cleaner/bad_words.txt"
+    "ai_daily": {
+      "doc_abstract": {
+        "api": "kimi"
+      }
     }
   },
   "dev": {
