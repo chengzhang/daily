@@ -12,7 +12,6 @@ openai.api_type = "azure"
 openai.api_base = "https://deliver8.openai.azure.com/"
 openai.api_version = "2024-02-15-preview"
 # openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_key = "2e40a7b847aa487ca40c30bda3b931a0"
 
 """
 response = openai.ChatCompletion.create(
