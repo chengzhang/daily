@@ -1,6 +1,8 @@
 git+https://github.com/chengzhang/pybp.git
 
+azure-cognitiveservices-speech
+beautifulsoup4
 click
 openai==0.28
+pydub
 requests
-beautifulsoup4
