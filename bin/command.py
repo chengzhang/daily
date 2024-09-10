@@ -24,16 +24,16 @@ def cli():
 
 @cli.command()
 @click.argument("in_file", type=str)  # news urls text file, one link per line
-@click.argument("out_file", type=str)  # final doc text file
+@click.argument("out_dir", type=str)  # 最终的输出目录，包含文本、语音等
 @click.option("--overwrite", is_flag=True, help='如果 out_file 文件存在，是否直接覆盖它，默认：覆盖')
 @click.option("--verbose", is_flag=True, help='输出详细的清洗过程')
 @click.option("--internal_file", type=str, help='internal output text file')
 def ai_daily(
         in_file: str,
-        out_file: str,
+        out_dir: str,
         overwrite: Optional,
         verbose: Optional,
-        internal_file: Optional,
+        internal_dir: Optional,
 ):
     """ ai-related news daily
     example: python bin/command.py ai-daily tests/daily/entry/ai_daily/test_ai_daily_entiry.input_example.txt tmp/test_ai_daily_entiry.output.txt  # noqa: E501
@@ -43,38 +43,32 @@ def ai_daily(
         logger.error(f'in_file is not a valid path: {in_file}')
         return
 
-    """ out file """
-    if os.path.exists(out_file):
+    """ out dir """
+    if os.path.exists(out_dir):
         if overwrite:
-            logger.warning(f'out_file is going to be overwrite: {out_file}')
+            logger.warning(f'out_dir is going to be overwrite: {out_dir}')
+            # TODO: 备份
+            os.rmdir(out_dir)
         else:
             logger.error(f'out_file exist, and not overwrite!')
             return
-    else:
-        out_dir = os.path.dirname(out_file)
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+    os.makedirs(out_dir)
 
-    """ internal file """
-    if internal_file:
-        if os.path.exists(internal_file):
+    """ internal dir """
+    if internal_dir:
+        if os.path.exists(internal_dir):
             if overwrite:
-                logger.warning(f'internal_file is going to be overwrite: {internal_file}')
+                logger.warning(f'internal_dir is going to be overwrite: {internal_dir}')
+                os.rmdir(internal_dir)
             else:
                 logger.error(f'internal_file exist, and not overwrite!')
                 return
-        else:
-            out_dir = os.path.dirname(internal_file)
-            if not os.path.exists(out_dir):
-                os.makedirs(out_dir)
+        os.makedirs(internal_dir)
 
     in_urls = load_text_line_file(in_file)
     ai_daily_entry = AiDailyEntry(in_urls)
     daily_result = ai_daily_entry.report()
-
-    dump_text_line_file([daily_result.text], out_file)
-    if internal_file:
-        dump_text_line_file(daily_result.logs, internal_file)
+    ai_daily_entry.dump(daily_result, out_dir, internal_dir)
 
 
 @cli.command()

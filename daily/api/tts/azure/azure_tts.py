@@ -8,6 +8,7 @@ import os
 from typing import Dict, Optional
 import pandas as pd
 import azure.cognitiveservices.speech as speechsdk
+from daily.api.tts.tts_interface import TtsInput, TtsOutput, TtsInterface
 
 
 class SupportedVoices:
@@ -41,31 +42,31 @@ class SupportedVoices:
         return self.speaker_to_voice_name[speaker]
 
 
-class AzureTTS(object):
-    service_region = "eastus"
+class AzureTTS(TtsInterface):
 
     def __init__(self, *args, **kwargs):
+        super().__init__()
         self.speech_key = os.getenv('AZURE_SPEECH_KEY')
+        self.service_region = "eastus"
         self.supported_voices = SupportedVoices.from_csv()
 
-    def tts(self, text, speaker='云健', wav_file: str = None) -> Optional[AudioSegment]:
+    def tts(self, tts_input: TtsInput) -> Optional[TtsOutput]:
         """
-        :param text:
-        :param speaker:
-        :param wav_file:
         :return:
         TODO: 加一个 cache 的模块来缓存
         """
-        if not wav_file:
-            wav_file = f'tmp/{abs(hash(text))}.wav'
+        # if not wav_file:
+        #     wav_file = f'tmp/{abs(hash(text))}.wav'
         # Creates an instance of a speech config with specified subscription key and service region.
+        speaker = tts_input.voice_name
         speech_config = speechsdk.SpeechConfig(subscription=self.speech_key, region=self.service_region)
         # Note: the voice setting will not overwrite the voice element in input SSML.
         # speech_config.speech_synthesis_voice_name = "zh-CN-XiaohanYanli"
-        voice_name = self.supported_voices.get_voice_name(speaker)
-        speech_config.speech_synthesis_voice_name = voice_name
+        voice_name_ = self.supported_voices.get_voice_name(speaker)
+        speech_config.speech_synthesis_voice_name = voice_name_
         speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
         # text = "你好，这是晓晓。"
+        text = tts_input.text
         result = speech_synthesizer.speak_text_async(text).get()
         # Check result
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
@@ -79,12 +80,14 @@ class AzureTTS(object):
             
         audio_stream = BytesIO(result.audio_data)
         audio_segment = AudioSegment.from_wav(audio_stream)
+        if tts_input.out_audio_file:
+            audio_segment.export(tts_input.out_audio_file, format="wav")
+
         # ad_stream = speechsdk.AudioDataStream(result=result)
-        # # ad_stream.save_to_wav_file('tmp/azure_tts_result_example.wav')
         # ad_stream.save_to_wav_file(wav_file)
-        # print(f'audio saved to {wav_file}')
-        # return wav_file
-        return audio_segment 
+
+        output = TtsOutput(audio_segment, input=tts_input)
+        return output
 
 
 if __name__ == '__main__':
